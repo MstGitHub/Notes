@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Notebook</title>
+  <!-- Icons & Stylesheets -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body,
+    html {
+      padding: 0px;
+      margin: 0px;
+    }
+
+    #root {
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background-color: rgba(0, 255, 255, 0.1);
+      display: flex;
+    }
+
+    .notes-enter {
+      padding: 16px;
+
+      flex: 1;
+    }
+
+    .notes-enter>textarea {
+      width: 100%;
+      height: 100%;
+    }
+
+    .notes-output {
+      padding: 16px;
+      flex: 1;
+    }
+
+
+    /* 侧边栏 */
+    .notes-side {
+      padding: 12px 10px;
+      width: 20%;
+      background-color: rgba(46, 139, 87, 0.4);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      color: rgba(46, 139, 87, 0.8);
+      cursor: pointer;
+      margin: 0 auto;
+    }
+
+    .list-box{
+      padding: 10px 0px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      font-size: 14px;
+      font-weight: 500;
+      background-color: rgba(46, 139, 87, 0.6);
+      color: #000;
+      padding: 8px 2px;
+      border: 1px dotted slateblue;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .list-item:hover{
+      background-color: rgba(46, 139, 87, 0.8);
+    }
+    .list-item.active{
+      background-color: rgba(46, 139, 87, 1);
+      border: 2px solid slateblue;
+    }
+    
+  </style>
+</head>
+
+<body>
+  <!-- Include the library in the page -->
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <script src="https://unpkg.com/marked"></script>
+
+  <div id="root">
+    <aside class="notes-side">
+      <button class="add-btn" @click="addNote"><i class="material-icons">add</i> 添加笔记</button>
+      <div class="list-box">
+        <div class="list-item" :class="{active: note.id === selectId }" v-for="note of notes" @click="noteClick(note.id)" >
+          {{ note.title }}
+        </div>
+      </div>
+    </aside>
+    <template v-if="selectId">
+      <div class="notes-enter">
+        <textarea v-model="selectNode.content" name="" id=""></textarea>
+      </div>
+      <div v-html="previewContent" class="notes-output">
+  
+      </div>
+    </template>
+    
+  </div>
+  <script>
+    new Vue({
+      name: "notebook",
+      el: "#root",
+
+      data() {
+        return {
+          notes: JSON.parse(localStorage.getItem("notes")) || [],
+          selectId: localStorage.getItem("select-id"),
+        }
+      },
+
+      methods: {
+        saveNotes () {
+          localStorage.setItem("notes", JSON.stringify(this.notes));
+        },
+        addNote () {
+          const time = Date.now();
+          this.notes.push({
+            id: String(time),
+            title: `笔记 ${this.notes.length + 1}`,
+            content: `# 请在这里✍️，支持使用md语法`,
+            created: time,
+            favorite: false,
+          })
+        },
+        noteClick (noteId) {
+          this.selectId = noteId
+          localStorage.setItem("select-id", noteId);
+        }
+
+      },
+
+      computed: {
+        previewContent() {
+          return marked(this.selectNode.content)
+        },
+        selectNode() {
+          return this.notes.find(item => item.id === this.selectId);
+        }
+      },
+
+      watch: {
+        notes: {
+          handler:"saveNotes",
+          deep: true, 
+        },
+      },
+    })
+  </script>
+</body>
+
+</html>
